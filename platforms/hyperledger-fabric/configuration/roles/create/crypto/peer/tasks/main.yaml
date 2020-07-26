@@ -3,18 +3,19 @@
 #############################################################################################
 
 # Check if CA-tools pod is running
-- name: Check if CA-tools is running
-  k8s_facts:
-    kind: Pod
-    namespace: "{{ component_name }}"
-    kubeconfig: "{{ kubernetes.config_file }}"
-    context: "{{ kubernetes.context }}"
+- name: "Waiting for CA-tool in {{ item.name | lower }}-net"
+  include_role:
+    name: "{{ playbook_dir }}/../../shared/configuration/roles/check/helm_component"
+  vars:
+    component_type: "Pod"
+    namespace: "{{ item.name | lower }}-net"
+    component_name: "ca-tools"
+    check: "name"
     label_selectors:
-      - name = ca-tools  
-  register: ca_tools
-  until: ("Running" in ca_tools|json_query('resources[*].status.phase'))
-  retries: "{{ network.env.retry_count}}"
-  delay: 40
+      - name = {{ component_name }}
+  tags:
+    - notest
+
 
 # Ensure ca directory is present in build
 - name: Ensure ca directory exists
@@ -22,6 +23,7 @@
     path: "./build/crypto-config/peerOrganizations/{{ component_name }}/ca"
     recurse: yes
     state: directory
+
 
 # Check if CA certs exists in vault, if not this should fail. If yes, get the certificate
 - name: Check if ca certs already created
@@ -31,6 +33,7 @@
   environment:
     VAULT_ADDR: "{{ vault.url }}"
     VAULT_TOKEN: "{{ vault.root_token }}"
+  changed_when: false
 
 # Check if CA key exists in vault, if not this should fail. If yes, get the certificate
 - name: Check if ca key already created
@@ -40,6 +43,7 @@
   environment:
     VAULT_ADDR: "{{ vault.url }}"
     VAULT_TOKEN: "{{ vault.root_token }}"
+  changed_when: false
 
 - name: Call peercheck.yaml for each peer
   include_tasks: peercheck.yaml
@@ -49,6 +53,8 @@
 
 - name: Call common.yaml for each peer
   include_tasks: common.yaml
+  tags:
+    - notest
 
 - name: Call peer.yaml for each peer
   include_tasks: peer.yaml
@@ -57,6 +63,18 @@
     loop_var: peer
 
 ############################################################################################
+# Check if the MSP config.yaml exist or not
+- name: Check if the MSP config.yaml exist or not
+  stat:
+    path: "./build/crypto-config/peerOrganizations/{{ component_name }}/msp/config.yaml"
+  register: msp_file_status
+
+# Create MSP directory if it does not exist
+- name: Create the msp directory if it does not exist
+  file:
+    path: "./build/crypto-config/peerOrganizations/{{ component_name }}/msp"
+    state: directory
+
 # This task creates the MSP config.yaml file for organizations
 - name: Create the MSP config.yaml file for orgs
   shell: |
@@ -71,19 +89,23 @@
         Certificate: cacerts/ca-{{ component_name }}-7054.pem
         OrganizationalUnitIdentifier: peer
     EOF
+  when: not msp_file_status.stat.exists
+  changed_when: false
 
-# Check orderer-certificate File exists
-- name: Check that orderer-certificate File exists
+# Check orderer-certificate file exists
+- name: Check that orderer-certificate file exists
   stat:
     path: "{{ orderer.certificate }}"
   loop: "{{ network.orderers }}"
   loop_control:
     loop_var: orderer
   register: orderer_file_result
-  failed_when: add_new_org == 'true' and not orderer_file_result.results[0].stat.exists # Fail the task if new_org is added and orderer-cert does not exist
+  failed_when: add_new_org == 'true' and not orderer_file_result.stat.exists # Fail the task if new_org is added and orderer-cert does not exist
+  tags:
+    - notest
 
 # Ensure orderer-cert directory is present
-- name: Ensure orderer-cert directory exists
+- name: Ensure orderer tls cert directory exists
   file:
     path: "./build/crypto-config/ordererOrganizations/{{ orderer.org_name|lower }}-net/orderers/{{orderer.name}}.{{ orderer.org_name|lower }}-net/tls"
     recurse: yes
@@ -92,20 +114,25 @@
   loop_control:
     loop_var: orderer
   when: add_new_org == 'false'
+  tags:
+    - notest
 
 # Copy the ca.crt when add_new_org is false 
-- name: Copy ca.crt from auto-generated path to given path
+- name: Copy tls ca.crt from auto-generated path to given path
   copy:
     src: "./build/crypto-config/ordererOrganizations/{{ orderer.org_name|lower }}-net/orderers/{{orderer.name}}.{{ orderer.org_name|lower }}-net/tls/ca.crt"
     dest: "{{ orderer.certificate }}"
     follow: no
+    force: yes
   loop: "{{ network.orderers }}"
   loop_control:
     loop_var: orderer
   when: add_new_org == 'false'
+  tags:
+    - notest
 
 # Check if Orderer certs exists in vault. If yes, get the certificate
-- name: Check if Orderer certs already created
+- name: Check if Orderer certs exist in Vault
   shell: |
     vault kv get -field=ca.crt secret/crypto/peerOrganizations/{{ component_name }}/orderer/tls
   environment:
@@ -116,13 +143,18 @@
     loop_var: orderer
   register: orderer_certs_result
   ignore_errors: yes
+  changed_when: false
+  tags:
+    - notest
 
-- name: Save Orderer certs if already created
+- name: Save Orderer certs if not in Vault
   local_action: copy content="{{ orderer_certs_result.results[0].stdout }}" dest="{{ orderer.certificate }}"
   loop: "{{ network.orderers }}"
   loop_control:
     loop_var: orderer
   when: orderer_certs_result.results[0].failed == False
+  tags:
+    - notest
 
 - name: Copy organization level certificates for orderers
   shell: |
@@ -135,6 +167,8 @@
     VAULT_ADDR: "{{ vault.url }}"
     VAULT_TOKEN: "{{ vault.root_token }}"
   when: orderer_certs_result.results[0].failed == True
+  tags:
+    - notest
 
 # Check admin msp already created
 - name: Check if admin msp already created
@@ -145,6 +179,7 @@
     VAULT_TOKEN: "{{ vault.root_token }}"
   register: vault_admin_result
   ignore_errors: yes
+  changed_when: false
 
 - name: Copy organization level certificates for orgs
   shell: |
@@ -164,6 +199,7 @@
     VAULT_TOKEN: "{{ vault.root_token }}"
   register: vault_user_result
   ignore_errors: yes
+  changed_when: False
 
 - name: Copy user certificates for orgs
   shell: |

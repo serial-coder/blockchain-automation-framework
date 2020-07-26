@@ -73,7 +73,7 @@ The fields under `docker` section are
 | password   | Password credential required for login      |
 
 ---
-**NOTE:** Please follow [these instructions](../operations/configure_prerequisites.md#docker) to build and store the docker images before running the Ansible playbooks.
+**NOTE:** Please follow [these instructions](../operations/configure_prerequisites.html#docker) to build and store the docker images before running the Ansible playbooks.
 
 ---
 
@@ -92,8 +92,8 @@ The `genesis` section contains Information about pool transaction genesis and do
 | Field       | Description                                              |
 |-------------|----------------------------------------------------------|
 | state        | State is placeholder for future, when there will be option to join to existing cluter. Currently only "absent" is supported. That means, that genesis will be always generated    |
-| pool         | Path to pool transaction genesis. (/platforms/hyperledger-indy/configuration/roles/setup/pool_genesis/README.md)     |
-| domain | Path to domain transaction genesis. (/platforms/hyperledger-indy/configuration/roles/setup/domain_genesis/README.md)            |
+| pool         | Path to pool transaction genesis. [Readme here](https://github.com/hyperledger-labs/blockchain-automation-framework/blob/master/platforms/hyperledger-indy/configuration/roles/setup/pool_genesis/).    |
+| domain | Path to domain transaction genesis. [Readme here](https://github.com/hyperledger-labs/blockchain-automation-framework/blob/master/platforms/hyperledger-indy/configuration/roles/setup/domain_genesis/).      |
 
 
 The `organizations` section allows specification of one or many organizations that will be connecting to a network. If an organization is also hosting the root of the network (e.g. membership service, etc), then these services should be listed in this section as well.
@@ -129,7 +129,8 @@ For the aws and k8s field the snapshot with sample values is below
         encryption_key: "encryption_key_id"     # AWS encryption key. If present, it's used as the KMS key id for K8S storage class encryption.
         zone: "availability_zone"               # AWS availability zone
         region: "region"                        # AWS region
-        publicIps: []                           # List of all public IP addresses of each availability zone
+      
+      publicIps: ["1.1.1.1","2.2.2.2"]                           # List of all public IP addresses of each availability zone
 
       # Kubernetes cluster deployment variables. The config file path has to be provided in case
       # the cluster has already been created.
@@ -148,7 +149,14 @@ The `aws` field under each organisation contains: (This will be ignored if cloud
 | encryption_key                              | AWS encryption key. If present, it's used as the KMS key id for K8S storage class encryption.  |
 | zone                              | AWS availability zone  |
 | region                              | AWS region  |
-| publicIps                           | List of all public IP addresses of each availability zone |
+
+The `publicIps` field under each organisation contains:
+
+| Field       | Description                                              |
+|-------------|----------------------------------------------------------|
+| publicIps   | List of all public IP addresses of each availability zone from all organizations in the same k8s cluster |
+
+**NOTE**: Network.yaml file consists of more organizations, where each organization can be under different availability zone. It means, that each organization has different IP. The field `publicIps` holds list of all IPs of all organizations in the same cluster. This should be in JSON Array format like ["1.1.1.1","2.2.2.2"] and must contain different IP for each availability zone on the K8s cluster i.e. If the K8s cluster is in two AZ, then two IP addresses should be provided here.
 
 The `k8s` field under each organisation contains
 
@@ -180,7 +188,7 @@ For gitops fields the snapshot from the sample configuration file with the examp
       # Git Repo details which will be used by GitOps/Flux.
       # Do not check-in git_password
       gitops:
-        git_ssh: "gitops_ssh_url"                   # Gitops ssh url for flux value files like "ssh://git@github.com:hyperledger-labs/blockchain-automation-framework.git"
+        git_ssh: "gitops_ssh_url"                   # Gitops ssh url for flux value files like "ssh://git@github.com/hyperledger-labs/blockchain-automation-framework.git"
         branch: "gitops_branch"                     # Git branch where release is being made
         release_dir: "gitops_release_dir"           # Relative Path in the Git repo for flux sync per environment. 
         chart_source: "gitops_charts"               # Relative Path where the Helm charts are stored in Git repo

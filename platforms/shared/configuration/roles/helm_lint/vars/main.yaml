@@ -25,3 +25,7 @@ charts:
   nodenode: node
   tessera: node_tessera
   constellation: node_constellation
+  pki-generator: generate-pki
+  signer: signer
+  node_orion: node_orion
+  idman: idman

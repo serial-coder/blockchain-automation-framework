@@ -6,10 +6,11 @@
 # This task ensures directory existance, if not creates a new one
 ---
 - name: "Ensure build dir exists"
-  file:
+  include_role: 
+    name: "{{ playbook_dir }}/../../shared/configuration/roles/check/setup"
+  vars:
     path: "{{ node_certs }}"
-    recurse: yes
-    state: directory
+    check: "ensure_dir"
 
 - name: Check if truststore already created
   shell: |
@@ -111,6 +112,14 @@
   environment:
     VAULT_ADDR: "{{ vault.url }}"
     VAULT_TOKEN: "{{ vault.root_token }}"
+
+- name: "Write cordapps credentials to vault"
+  shell: |
+    vault kv put {{ component_name }}/credentials/cordapps repo_username="{{ cordapps_details.username }}" repo_password="{{ cordapps_details.password }}"
+  environment:
+    VAULT_ADDR: "{{ vault.url }}"
+    VAULT_TOKEN: "{{ vault.root_token }}"
+  when: cordapps_details != "" 
 
 - name: Create Ambassador certificates
   include_role: 

@@ -3,31 +3,35 @@
 ##############################################################################################
 - name: "Wait for namespace creation for nodes"
   include_role:
-    name: check/k8_component
+    name: "{{ playbook_dir }}/../../shared/configuration/roles/check/k8_component"
   vars:
     component_type: "Namespace"
     component_name: "{{ component_ns }}"
+    type: "retry"
 
 - name: "Wait for vault-auth creation for nodes"
   include_role:
-    name: check/k8_component
+    name: "{{ playbook_dir }}/../../shared/configuration/roles/check/k8_component"
   vars:
     component_type: "ServiceAccount"
     component_name: "vault-auth"
+    type: "retry"
 
 - name: "Wait for vault-reviewer creation for nodes"
   include_role:
-    name: check/k8_component
+    name: "{{ playbook_dir }}/../../shared/configuration/roles/check/k8_component"
   vars:
     component_type: "ServiceAccount"
     component_name: "vault-reviewer"
+    type: "retry"
 
 - name: "Wait for ClusterRoleBinding creation for nodes"
   include_role:
-    name: check/k8_component
+    name: "{{ playbook_dir }}/../../shared/configuration/roles/check/k8_component"
   vars:
     component_type: "ClusterRoleBinding"
     component_name: "{{ component_ns }}-role-tokenreview-binding"
+    type: "retry"
 
 # ----------------------------------------------------------------------  
 # create vault access policies
@@ -53,10 +57,10 @@
     name: create/certificates/node
   vars:
     component_name: "{{ node.name | lower }}"
+    cordapps_details: "{{ cordapps }}"
     nms_url: "{{ network | json_query('orderers[?type==`networkmap`].uri') | first }}"
     nms_cert_file: "{{ network | json_query('orderers[?type==`networkmap`].certificate') | first }}"
     doorman_cert_file: "{{ network | json_query('orderers[?type==`doorman`].certificate') | first }}"
-    component_name: "{{ node.name | lower }}"
     cert_subject: "{{ item.subject | regex_replace(',', '/') }}" #Use org level subject for certificate generation
   loop: "{{ services.peers }}"
   loop_control:
@@ -120,32 +124,11 @@
     GIT_PASSWORD: "{{ gitops.password }}"
     GIT_BRANCH: "{{ gitops.branch }}"
     GIT_RESET_PATH: "platforms/r3-corda/configuration"
-    msg: "Pushing db and job deployment files for {{ node.name }}"
+    msg: "[ci skip] Pushing db and job deployment files for {{ node.name }}"
   loop: "{{ services.peers }}"
   loop_control:
     loop_var: node
-
-- name: "Wait for node db pod creation"
-  include_role:
-    name: check/node_component
-  vars:
-    component_type: "Pod"
-    component_name: "{{ node.name }}db"
-  loop: "{{ services.peers }}"
-  loop_control:
-    loop_var: node
-
-- name: "Wait for node job completion"
-  include_role:
-    name: check/node_component
-  vars:
-    component_type: "Job"
-    component_name: "{{ node.name }}-registration"
-  loop: "{{ services.peers }}"
-  loop_control:
-    loop_var: node
-  when: nodekeystore_result.results[0].failed == True
-
+    
 #----------------------------------------------------------------------  
 # create deployment file for node node
 - name: 'Create node deployment file'
@@ -160,6 +143,7 @@
     doorman_url: "{{ network | json_query('orderers[?type==`doorman`].uri') | first }}"
     doorman_domain: "{{ doorman_url.split(':')[1] }}"
     corda_version: "corda-{{ network.version }}"
+    cordapps_details: "{{ cordapps }}"
     release_dir: "{{ playbook_dir }}/../../../{{ gitops.release_dir }}"
   loop: "{{ services.peers }}"
   loop_control:
@@ -178,7 +162,7 @@
     GIT_PASSWORD: "{{ gitops.password }}"
     GIT_RESET_PATH: "platforms/r3-corda/configuration"
     GIT_BRANCH: "{{ gitops.branch }}"
-    msg: "Creating node deployment file for {{ node.name }}"
+    msg: "[ci skip] Pushing node deployment file for {{ node.name }}"
   loop: "{{ services.peers }}"
   loop_control:
     loop_var: node

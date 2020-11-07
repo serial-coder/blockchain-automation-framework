@@ -85,7 +85,7 @@
     VAULT_TOKEN: "{{ org.vault.root_token }}"
 
 # This task deletes crypto material
-- name: Delete Crypto material 
+- name: Delete Crypto material for CENM
   shell: |
     vault delete secret/{{ org.name | lower }}/root/certs
     vault delete secret/{{ org.name | lower }}/{{ org.services.idman.name }}/certs
@@ -100,6 +100,9 @@
     vault delete secret/{{ org.name | lower }}/{{ org.services.networkmap.name }}/certs
     vault delete secret/{{ org.name | lower }}/{{ org.services.networkmap.name }}/tlscerts
     vault delete secret/{{ org.name | lower }}/{{ org.services.signer.name }}/certs
+    vault delete secret/{{ org.name | lower }}/credentials/keystore
+    vault delete secret/{{ org.name | lower }}/credentials/truststore
+    vault delete secret/{{ org.name | lower }}/credentials/ssl
   environment:
     VAULT_ADDR: "{{ org.vault.url }}"
     VAULT_TOKEN: "{{ org.vault.root_token }}"
@@ -107,7 +110,7 @@
 
 
 # This task deletes crypto material
-- name: Delete Crypto material 
+- name: Delete Crypto material for nodes
   shell: |
     vault delete secret/{{ org.name | lower }}/{{ peer.name | lower }}/certs/customnodekeystore
     vault delete secret/{{ org.name | lower }}/{{ peer.name | lower }}/certs/{{ network | json_query('orderers[?type==`idman`].name') | first }}
@@ -120,6 +123,7 @@
     vault delete secret/{{ org.name | lower }}/{{ peer.name | lower }}/certs
     vault delete secret/{{ org.name | lower }}/{{ peer.name | lower }}/root/certs
     vault delete secret/{{ org.name | lower }}/{{ peer.name | lower }}/network-parameters
+    vault delete secret/{{ org.name | lower }}/{{ peer.name | lower }}/credentials
   environment:
     VAULT_ADDR: "{{ org.vault.url }}"
     VAULT_TOKEN: "{{ org.vault.root_token }}"

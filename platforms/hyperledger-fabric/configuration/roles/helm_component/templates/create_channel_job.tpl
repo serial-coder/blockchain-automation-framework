@@ -1,12 +1,12 @@
-apiVersion: flux.weave.works/v1beta1
+apiVersion: helm.fluxcd.io/v1
 kind: HelmRelease
 metadata:
-  name: channel-{{ org.name | lower }}
+  name: channel-{{ org.name | lower }}-{{ component_name }}
   namespace: {{ component_ns }}
   annotations:
-    flux.weave.works/automated: "false"
+    fluxcd.io/automated: "false"
 spec:
-  releaseName: channel-{{ org.name | lower }}
+  releaseName: channel-{{ org.name | lower }}-{{ component_name }}
   chart:
     git: {{ git_url }}
     ref: {{ git_branch }}
@@ -14,6 +14,8 @@ spec:
   values:
     metadata:
       namespace: {{ component_ns }}
+      network:
+        version {{ network.version }}
       images:
         fabrictools: {{ fabrictools_image }}
         alpineutils: {{ alpine_image }}
@@ -28,8 +30,8 @@ spec:
       role: vault-role
       address: {{ vault.url }}
       authpath: {{ component_ns }}-auth
-      adminsecretprefix: secret/crypto/peerOrganizations/{{ component_ns }}/users/admin
-      orderersecretprefix: secret/crypto/peerOrganizations/{{ component_ns }}/orderer 
+      adminsecretprefix: {{ vault.secret_path | default('secret') }}/crypto/peerOrganizations/{{ component_ns }}/users/admin
+      orderersecretprefix: {{ vault.secret_path | default('secret') }}/crypto/peerOrganizations/{{ component_ns }}/orderer 
       serviceaccountname: vault-auth
       imagesecretname: regcred
 

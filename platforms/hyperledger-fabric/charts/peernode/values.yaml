@@ -10,7 +10,7 @@ metadata:
     #Eg. hyperledger/fabric-peer:1.4.0
     peer: 
     #Provide the valid image name and version to read certificates from vault server 
-    #Eg. alpineutils: adopfrablockchain.azurecr.io/alpine-utils:1.0
+    #Eg. alpineutils: hyperledgerlabs/alpine-utils:1.0
     alpineutils: 
   #Provide the custom labels  
   #NOTE: Provide labels other than name, release name , release service, chart version , chart name, run
@@ -38,6 +38,9 @@ peer:
   #Provide the value for tlsstatus to be true or false for organization's peer
   #Eg. tlsstatus: true
   tlsstatus:
+  #Provide a valid chaincode builder image for Fabric
+  #Eg. builder: hyperledger/fabric-ccenv:1.4.4
+  builder:
   couchdb:
     #Provide the username for couchdb login
     #If couchdb username is provided, it is mandatory to provide password for the same

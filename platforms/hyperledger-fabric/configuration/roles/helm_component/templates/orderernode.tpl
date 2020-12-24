@@ -1,10 +1,10 @@
-apiVersion: flux.weave.works/v1beta1
+apiVersion: helm.fluxcd.io/v1
 kind: HelmRelease
 metadata:
   name: {{ org_name }}-{{ orderer.name }}
   namespace: {{ namespace }}
   annotations:
-    flux.weave.works/automated: "false"
+    fluxcd.io/automated: "false"
 spec:
   releaseName: {{ org_name }}-{{ orderer.name }}
   chart:
@@ -24,6 +24,9 @@ spec:
       localmspid: {{ org_name }}MSP
       tlsstatus: true
       keepaliveserverinterval: 10s
+    
+    consensus:
+      name: {{ orderer.consensus }}
 
     storage:
       storageclassname: {{ org_name }}sc
@@ -42,7 +45,7 @@ spec:
       address: {{ vault.url }}
       role: vault-role
       authpath: {{ namespace }}-auth
-      secretprefix: secret/crypto/ordererOrganizations/{{ namespace }}/orderers/{{ orderer.name }}.{{ namespace }}
+      secretprefix: {{ vault.secret_path | default('secret') }}/crypto/ordererOrganizations/{{ namespace }}/orderers/{{ orderer.name }}.{{ namespace }}
       imagesecretname: regcred
       serviceaccountname: vault-auth
 {% if orderer.consensus == 'kafka' %}

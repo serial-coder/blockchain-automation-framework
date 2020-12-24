@@ -1,7 +1,6 @@
-# Fabric Charts
+# Hyperledger Fabric Charts
 
-The structure below represents the Chart structure for Hyperledger fabric components in the Blockchain Automation Framework 
-implementation.
+The structure below represents the Chart structure for Hyperledger fabric components in the Blockchain Automation Framework implementation.
 
 ```
 /hyperledger-fabric
@@ -28,13 +27,13 @@ implementation.
 ## CA (certification authority)
 
 ### About
-This folder consists CA helm charts which are used by the ansible playbooks for the deployment of the CA component. The folder contains a templates folder,a chart file and a value file. 
+This folder consists CA helm charts which are used by the ansible playbooks for the deployment of the CA component. The folder contains a templates folder, a chart file and a value file. 
 
 ### Folder Structure
 ```
 /ca
 |-- templates
-|   |--_helpers.tpl
+|   |-- _helpers.tpl
 |   |-- volumes.yaml
 |   |-- deployment.yaml
 |   |-- service.yaml
@@ -45,15 +44,15 @@ This folder consists CA helm charts which are used by the ansible playbooks for 
 ### Charts description
 
 #### templates
-- This folder contains template structures which when combined with values ,will generate valid Kubernetes manifest files for CA implementation.
+- This folder contains template structures which when combined with values, will generate valid Kubernetes manifest files for CA implementation.
 - This folder contains following template files for CA implementation
   
   - _helpers.tpl 
-      This fie doesnt output a Kubernetes manifest file as it begins with underscore (_) .And its a place to put template helpers that we can re-use throughout the chart.
+      This file doesnt output a Kubernetes manifest file as it begins with underscore (_). And its a place to put template helpers that we can re-use throughout the chart.
 	  That file is the default location for template partials ,as we have defined a template to encapsulate a Kubernetes block of labels for CA.
 	  
   - deployment.yaml
-      This file is used as a basic manifest for creating a Kubernetes deployment.For the ca node, this file creates a ca deployment.The file defines conatainers where ca conatainer is defined with fabric image and CA client and CA server onfiguration details and 
+      This file is used as a basic manifest for creating a Kubernetes deployment. For the ca node, this file creates a ca deployment. The file defines where ca container is defined with fabric image and CA client and CA server onfiguration details and 
 	  the init container basically configures the vault with various vault parameters.Certificates and CA server database are defined on the volume mount paths.
 	  
   - service.yaml
@@ -137,8 +136,7 @@ This folder consists create_channel helm charts which are used by the ansible pl
   
   - configmap.yaml
       The configmap.yaml file through template engine generate configmaps.In Kubernetes, a ConfigMap is a container for storing configuration data.Things like pods, can access the data in a ConfigMap. 
-	  The configmap.yaml file creates two configmaps namely genesis-block-peer and peer-config . When Tiller reads this configmap.yaml template,
-	  it sends it to Kubernetes as-is.
+	  The configmap.yaml file creates two configmaps namely genesis-block-peer and peer-config.
 	  For Create_channel component , it creates two configmaps, one for the channel creation having various data fields such as channel , peer and orderer details and other for the generation of channel artifacts containing the channel transaction (channeltx) block and other labels.
 	   
   - create_channel.yaml
@@ -252,8 +250,7 @@ This folder consists join_channel helm charts which are used by the ansible play
   
   - configmap.yaml
       The configmap.yaml file through template engine generate configmaps.In Kubernetes, a ConfigMap is a container for storing configuration data.Things like pods, can access the data in a ConfigMap. 
-	  The configmap.yaml file creates two configmaps namely genesis-block-peer and peer-config . When Tiller reads this configmap.yaml template,
-	  it sends it to Kubernetes as-is.
+	  The configmap.yaml file creates two configmaps namely genesis-block-peer and peer-config.
 	  For join_channel component , it creates two configmaps, one for the channel creation having various data fields such as channel , peer and orderer details and other for the generation of channel artifacts containing the channel transaction (channeltx) block and other labels.
 	   
   - join_channel.yaml
@@ -297,8 +294,7 @@ This folder consists Orderer helm charts which are used by the ansible playbooks
   
   - configmap.yaml
       The configmap.yaml file through template engine generate configmaps.In Kubernetes, a ConfigMap is a container for storing configuration data.Things like pods, can access the data in a ConfigMap. 
-	  The configmap.yaml file creates two configmaps namely genesis-block-orderer and orderer-config . When Tiller reads this configmap.yaml template,
-	  it sends it to Kubernetes as-is.
+	  The configmap.yaml file creates two configmaps namely genesis-block-orderer and orderer-config.
 	  
   - deployment.yaml
       This file is used as a basic manifest for creating a Kubernetes deployment.For the Orderer node, this file creates orderer deployment.
@@ -350,9 +346,7 @@ This folder consists Peer helm charts which are used by the ansible playbooks fo
   
   - configmap.yaml
       The configmap.yaml file through template engine generate configmaps.In Kubernetes, a ConfigMap is a container for storing configuration data.Things like pods, can access the data in a ConfigMap. 
-	  The configmap.yaml file creates two configmaps namely genesis-block-peer and peer-config . When Tiller reads this configmap.yaml template,
-	  it sends it to Kubernetes as-is.
-	  
+	  The configmap.yaml file creates two configmaps namely genesis-block-peer and peer-config.
   - service.yaml
       This template is used as a basic manifest for creating a service endpoint for our deployment.This service.yaml creates peer service endpoint.
 	  

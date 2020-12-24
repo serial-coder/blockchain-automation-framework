@@ -27,7 +27,6 @@
     file:
       path: "{{ vault.bin_directory }}"
       state: directory
-      recurse: yes
     when: not vault_stat_result.stat.exists
     tags:
       - vault
@@ -45,7 +44,7 @@
       loop_var: bin_item
 
   - name: Test vault installation
-    command: vault version
-    when: vault_stat_result.stat.exists or not vault_stat_result.stat.exists
+    command: "vault version"
+    changed_when: false
     tags:
       - molecule-idempotence-notest

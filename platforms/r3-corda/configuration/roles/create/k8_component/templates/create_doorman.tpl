@@ -1,9 +1,9 @@
-apiVersion: flux.weave.works/v1beta1
+apiVersion: helm.fluxcd.io/v1
 kind: HelmRelease
 metadata:
   name: {{ services.doorman.name }}
   annotations:
-    flux.weave.works/automated: "false"
+    fluxcd.io/automated: "false"
   namespace: {{ component_ns }}
 spec:
   releaseName: {{ services.doorman.name }}
@@ -64,7 +64,12 @@ spec:
     service:
       port: {{ services.doorman.ports.servicePort }}
       targetPort: {{ services.doorman.ports.targetPort }}
+{% if services.doorman.ports.nodePort is defined %}
+      type: NodePort
+      nodePort: {{ services.doorman.ports.nodePort }}
+{% else %}
       type: ClusterIP
+{% endif %}
       annotations: {}
     deployment:
       annotations: {}

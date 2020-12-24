@@ -29,7 +29,7 @@ metadata:
     app.kubernetes.io/managed-by: {{ .Release.Service }}
     app.kubernetes.io/instance: {{ .Release.Name }}
 spec:
-  servicetype: {{ .Values.frontend.serviceType }}
+  type: {{ .Values.frontend.serviceType }}
   selector:
     app: {{ .Values.nodeName }}
   ports:
@@ -39,7 +39,7 @@ spec:
         
 {{- if eq $.Values.proxy.provider "haproxy" }}
 ---
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
 metadata:
   name: {{ .Values.nodeName }}

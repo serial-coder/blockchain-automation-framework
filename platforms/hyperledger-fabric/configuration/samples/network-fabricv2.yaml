@@ -4,15 +4,16 @@ network:
   # Network level configuration specifies the attributes required for each organization
   # to join an existing network.
   type: fabric
-  version: 1.4.0                 # currently tested 1.4.0 and 1.4.4
+  version: 1.4.4                 # currently tested 1.4.0 and 1.4.4
 
   frontend: enabled #Flag for frontend to enabled for nodes/peers
 
   #Environment section for Kubernetes setup
   env:
-    type: "env_type"              # tag for the environment. Important to run multiple flux on single cluster
+    type: "dev"              # tag for the environment. Important to run multiple flux on single cluster
     proxy: haproxy                  # values can be 'haproxy' or 'ambassador'
     ambassadorPorts: 15010,15020    # Any additional Ambassador ports can be given here, must be comma-separated without spaces, this is valid only if proxy='ambassador'
+    loadBalancerSourceRanges: # (Optional) Default value is '0.0.0.0/0', this value can be changed to any other IP adres or list (comma-separated without spaces) of IP adresses, this is valid only if proxy='ambassador'
     retry_count: 20                 # Retry count for the checks
     external_dns: enabled           # Should be enabled if using external-dns for automatic route configuration
 
@@ -20,7 +21,7 @@ network:
   # Please ensure all required images are built and stored in this registry.
   # Do not check-in docker_password.
   docker:
-    url: "docker_url"
+    url: "index.docker.io/hyperledgerlabs"
     username: "docker_username"
     password: "docker_password"
   
@@ -55,6 +56,7 @@ network:
       - peer:
         name: peer0
         gossipAddress: peer0.carrier-net.org3ambassador.blockchaincloudpoc.com:8443  # External or internal URI of the gossip peer
+        peerAddress: peer0.carrier-net.org3ambassador.blockchaincloudpoc.com:8443 # External URI of the peer
       ordererAddress: orderer1.org1ambassador.blockchaincloudpoc.com:8443             # External or internal URI of the orderer
     - organization:      
       name: store
@@ -64,6 +66,7 @@ network:
       - peer:
         name: peer0
         gossipAddress: peer0.store-net.org3ambassador.blockchaincloudpoc.com:8443
+        peerAddress: peer0.store-net.org3ambassador.blockchaincloudpoc.com:8443 # External URI of the peer
       ordererAddress: orderer1.org1ambassador.blockchaincloudpoc.com:8443
     - organization:
       name: warehouse
@@ -73,6 +76,7 @@ network:
       - peer:
         name: peer0
         gossipAddress: peer0.warehouse-net.org2ambassador.blockchaincloudpoc.com:8443
+        peerAddress: peer0.warehouse-net.org3ambassador.blockchaincloudpoc.com:8443 # External URI of the peer
       ordererAddress: orderer1.org1ambassador.blockchaincloudpoc.com:8443
     - organization:
       name: manufacturer
@@ -82,6 +86,7 @@ network:
       - peer:
         name: peer0
         gossipAddress: peer0.manufacturer-net.org2ambassador.blockchaincloudpoc.com:8443
+        peerAddress: peer0.manufacturer-net.org3ambassador.blockchaincloudpoc.com:8443 # External URI of the peer
       ordererAddress: orderer1.org1ambassador.blockchaincloudpoc.com:8443
     genesis:
       name: OrdererGenesis  
@@ -101,6 +106,7 @@ network:
       type: orderer
       external_url_suffix: org1ambassador.blockchaincloudpoc.com
       org_status: new
+      cli: disabled
       ca_data:
         url: ca.supplychain-net:7054
         certificate: file/server.crt        # This has not been implemented in 0.2.0.0
@@ -122,17 +128,17 @@ network:
       vault:
         url: "vault_addr"
         root_token: "vault_root_token"
-
+        secret_path: "secret"
       # Git Repo details which will be used by GitOps/Flux.
-      # Do not check-in git_password
+      # Do not check-in git_access_token
       gitops:
-        git_ssh: "gitops_ssh_url"         # Gitops ssh url for flux value files like "ssh://git@github.com:hyperledger-labs/blockchain-automation-framework.git"
-        branch: "gitops_branch"           # Git branch where release is being made
+        git_ssh: "ssh://git@github.com/<username>/blockchain-automation-framework.git"         # Gitops ssh url for flux value files 
+        branch: "develop"           # Git branch where release is being made
         release_dir: "platforms/hyperledger-fabric/releases/dev" # Relative Path in the Git repo for flux sync per environment. 
         chart_source: "platforms/hyperledger-fabric/charts"     # Relative Path where the Helm charts are stored in Git repo
-        git_push_url: "gitops_push_url"   # Gitops https URL for git push like "github.com/hyperledger-labs/blockchain-automation-framework.git" (without https://)
+        git_push_url: "github.com/<username>/blockchain-automation-framework.git"   # Gitops https URL for git push  (without https://)
         username: "git_username"          # Git Service user who has rights to check-in in all branches
-        password: "git_password"          # Git Server user password
+        password: "git_access_token"          # Git Server user password
         email: "git_email"                # Email to use in git config
         private_key: "path_to_private_key"          # Path to private key file which has write-access to the git repo
      
@@ -180,6 +186,7 @@ network:
       type: peer
       external_url_suffix: org2ambassador.blockchaincloudpoc.com
       org_status: new
+      cli: enabled
       ca_data:
         url: ca.manufacturer-net:7054
         certificate: file/server.crt
@@ -201,17 +208,17 @@ network:
       vault:
         url: "vault_addr"
         root_token: "vault_root_token"
-
+        secret_path: "secret"
       # Git Repo details which will be used by GitOps/Flux.
-      # Do not check-in git_password
+      # Do not check-in git_access_token
       gitops:
-        git_ssh: "gitops_ssh_url"         # Gitops ssh url for flux value files like "ssh://git@github.com:hyperledger-labs/blockchain-automation-framework.git"
-        branch: "gitops_branch"           # Git branch where release is being made
+        git_ssh: "ssh://git@github.com/<username>/blockchain-automation-framework.git"         # Gitops ssh url for flux value files 
+        branch: "develop"           # Git branch where release is being made
         release_dir: "platforms/hyperledger-fabric/releases/dev" # Relative Path in the Git repo for flux sync per environment. 
         chart_source: "platforms/hyperledger-fabric/charts"     # Relative Path where the Helm charts are stored in Git repo
-        git_push_url: "gitops_push_url"   # Gitops https URL for git push like "github.com/hyperledger-labs/blockchain-automation-framework.git" (without https://)
+        git_push_url: "github.com/<username>/blockchain-automation-framework.git"   # Gitops https URL for git push  (without https://)
         username: "git_username"          # Git Service user who has rights to check-in in all branches
-        password: "git_password"          # Git Server user password
+        password: "git_access_token"          # Git Server user password
         email: "git_email"                # Email to use in git config
         private_key: "path_to_private_key"          # Path to private key file which has write-access to the git repo
 
@@ -228,7 +235,9 @@ network:
         - peer:
           name: peer0          
           type: anchor    # This can be anchor/nonanchor. Atleast one peer should be anchor peer.         
-          gossippeeraddress: peer0.manufacturer-net:7051 # Internal Address of the other peer in same Org for gossip, same peer if there is only one peer          
+          gossippeeraddress: peer0.manufacturer-net:7051 # Internal Address of the other peer in same Org for gossip, same peer if there is only one peer
+          peerAddress: peer0.manufacturer-net.org3ambassador.blockchaincloudpoc.com:8443 # External URI of the peer
+          cli: disabled      # Creates a peer cli pod depending upon the (enabled/disabled) tag.          
           grpc:
             port: 7051         
           events:
@@ -245,10 +254,11 @@ network:
             name: "chaincode_name" #This has to be replaced with the name of the chaincode
             version: "chaincode_version" #This has to be replaced with the version of the chaincode
             maindirectory: "chaincode_main"  #The main directory where chaincode is needed to be placed
+            lang: "golang"  # The language in which the chaincode is written ( golang/java/node )
             repository:
               username: "git_username"          # Git Service user who has rights to check-in in all branches
-              password: "git_password"
-              url: "github.com/hyperledger-labs/blockchain-automation-framework.git"
+              password: "git_access_token"
+              url: "github.com/<username>/blockchain-automation-framework.git"
               branch: develop
               path: "chaincode_src"   #The path to the chaincode 
             arguments: 'chaincode_args' #Arguments to be passed along with the chaincode parameters
@@ -263,6 +273,7 @@ network:
       type: peer
       external_url_suffix: org3ambassador.blockchaincloudpoc.com
       org_status: new
+      cli: enabled
       ca_data:
         url: ca.carrier-net:7054
         certificate: file/server.crt
@@ -284,17 +295,17 @@ network:
       vault:
         url: "vault_addr"
         root_token: "vault_root_token"
-
+        secret_path: "secret"
       # Git Repo details which will be used by GitOps/Flux.
-      # Do not check-in git_password
+      # Do not check-in git_access_token
       gitops:
-        git_ssh: "gitops_ssh_url"         # Gitops ssh url for flux value files like "ssh://git@github.com:hyperledger-labs/blockchain-automation-framework.git"
-        branch: "gitops_branch"           # Git branch where release is being made
+        git_ssh: "ssh://git@github.com/<username>/blockchain-automation-framework.git"         # Gitops ssh url for flux value files 
+        branch: "develop"           # Git branch where release is being made
         release_dir: "platforms/hyperledger-fabric/releases/dev" # Relative Path in the Git repo for flux sync per environment. 
         chart_source: "platforms/hyperledger-fabric/charts"     # Relative Path where the Helm charts are stored in Git repo
-        git_push_url: "gitops_push_url"   # Gitops https URL for git push like "github.com/hyperledger-labs/blockchain-automation-framework.git" (without https://)
+        git_push_url: "github.com/<username>/blockchain-automation-framework.git"   # Gitops https URL for git push  (without https://)
         username: "git_username"          # Git Service user who has rights to check-in in all branches
-        password: "git_password"          # Git Server user password
+        password: "git_access_token"          # Git Server user password
         email: "git_email"                # Email to use in git config
         private_key: "path_to_private_key"          # Path to private key file which has write-access to the git repo
 
@@ -309,7 +320,9 @@ network:
         - peer:
           name: peer0          
           type: anchor    # This can be anchor/nonanchor. Atleast one peer should be anchor peer.    
-          gossippeeraddress: peer0.carrier-net:7051 # Internal Address of the other peer in same Org for gossip, same peer if there is only one peer          
+          gossippeeraddress: peer0.carrier-net:7051 # Internal Address of the other peer in same Org for gossip, same peer if there is only one peer
+          peerAddress: peer0.carrier-net.org3ambassador.blockchaincloudpoc.com:8443 # External URI of the peer
+          cli: disabled      # Creates a peer cli pod depending upon the (enabled/disabled) tag.          
           grpc:
             port: 7051         
           events:
@@ -326,10 +339,11 @@ network:
             name: "chaincode_name"   #This has to be replaced with the name of the chaincode
             version: "chaincode_version"   #This has to be replaced with the version of the chaincode
             maindirectory: "chaincode_main"    #The main directory where chaincode is needed to be placed
+            lang: "golang"  # The language in which the chaincode is written ( golang/java/node )
             repository:
               username: "git_username"          # Git Service user who has rights to check-in in all branches
-              password: "git_password"
-              url: "github.com/hyperledger-labs/blockchain-automation-framework.git"
+              password: "git_access_token"
+              url: "github.com/<username>/blockchain-automation-framework.git"
               branch: develop 
               path: "chaincode_src"    #The path to the chaincode 
             arguments: 'chaincode_args'       #Arguments to be passed along with the chaincode parameters
@@ -364,25 +378,24 @@ network:
       vault:
         url: "vault_addr"
         root_token: "vault_root_token"
-
+        secret_path: "secret"
       # Git Repo details which will be used by GitOps/Flux.
-      # Do not check-in git_password
+      # Do not check-in git_access_token
       gitops:
-        git_ssh: "gitops_ssh_url"         # Gitops ssh url for flux value files like "ssh://git@github.com:hyperledger-labs/blockchain-automation-framework.git"
-        branch: "gitops_branch"           # Git branch where release is being made
+        git_ssh: "ssh://git@github.com/<username>/blockchain-automation-framework.git"         # Gitops ssh url for flux value files 
+        branch: "develop"           # Git branch where release is being made
         release_dir: "platforms/hyperledger-fabric/releases/dev" # Relative Path in the Git repo for flux sync per environment. 
         chart_source: "platforms/hyperledger-fabric/charts"     # Relative Path where the Helm charts are stored in Git repo
-        git_push_url: "gitops_push_url"   # Gitops https URL for git push like "github.com/hyperledger-labs/blockchain-automation-framework.git" (without https://)
+        git_push_url: "github.com/<username>/blockchain-automation-framework.git"   # Gitops https URL for git push  (without https://)
         username: "git_username"          # Git Service user who has rights to check-in in all branches
-        password: "git_password"          # Git Server user password
+        password: "git_access_token"          # Git Server user password
         email: "git_email"                # Email to use in git config
         private_key: "path_to_private_key"          # Path to private key file which has write-access to the git repo
 
       #Optional for infrastructure configuration files.
       infrastructure:
         target_state: "present"  # Options: present, absent, planned            
-        refresh_inventory: yes  
-
+        refresh_inventory: yes
         
       services:
         ca:
@@ -395,7 +408,9 @@ network:
         - peer:
           name: peer0          
           type: anchor    # This can be anchor/nonanchor. Atleast one peer should be anchor peer. 
-          gossippeeraddress: peer0.store-net:7051 # Internal Address of the other peer in same Org for gossip, same peer if there is only one peer          
+          gossippeeraddress: peer0.store-net:7051 # Internal Address of the other peer in same Org for gossip, same peer if there is only one peer 
+          peerAddress: peer0.store-net.org3ambassador.blockchaincloudpoc.com:8443 # External URI of the peer   
+          cli: disabled      # Creates a peer cli pod depending upon the (enabled/disabled) tag.      
           grpc:
             port: 7051
           events:
@@ -412,10 +427,11 @@ network:
             name: "chaincode_name" #This has to be replaced with the name of the chaincode
             version: "chaincode_version" #This has to be replaced with the version of the chaincode
             maindirectory: "chaincode_main"  #The main directory where chaincode is needed to be placed
+            lang: "golang"  # The language in which the chaincode is written ( golang/java/node )
             repository:
               username: "git_username"          # Git Service user who has rights to check-in in all branches
-              password: "git_password"
-              url: "github.com/hyperledger-labs/blockchain-automation-framework.git"
+              password: "git_access_token"
+              url: "github.com/<username>/blockchain-automation-framework.git"
               branch: develop
               path: "chaincode_src"   #The path to the chaincode 
             arguments: 'chaincode_args' #Arguments to be passed along with the chaincode parameters
@@ -430,6 +446,7 @@ network:
       type: peer
       external_url_suffix: org2ambassador.blockchaincloudpoc.com
       org_status: new
+      cli: disabled
       ca_data:
         url: ca.warehouse-net:7054
         certificate: file/server.crt
@@ -451,17 +468,17 @@ network:
       vault:
         url: "vault_addr"
         root_token: "vault_root_token"
-
+        secret_path: "secret"
       # Git Repo details which will be used by GitOps/Flux.
-      # Do not check-in git_password
+      # Do not check-in git_access_token
       gitops:
-        git_ssh: "gitops_ssh_url"         # Gitops ssh url for flux value files like "ssh://git@github.com:hyperledger-labs/blockchain-automation-framework.git"
-        branch: "gitops_branch"           # Git branch where release is being made
+        git_ssh: "ssh://git@github.com/<username>/blockchain-automation-framework.git"         # Gitops ssh url for flux value files 
+        branch: "develop"           # Git branch where release is being made
         release_dir: "platforms/hyperledger-fabric/releases/dev" # Relative Path in the Git repo for flux sync per environment. 
         chart_source: "platforms/hyperledger-fabric/charts"     # Relative Path where the Helm charts are stored in Git repo
-        git_push_url: "gitops_push_url"   # Gitops https URL for git push like "github.com/hyperledger-labs/blockchain-automation-framework.git" (without https://)
+        git_push_url: "github.com/<username>/blockchain-automation-framework.git"   # Gitops https URL for git push  (without https://)
         username: "git_username"          # Git Service user who has rights to check-in in all branches
-        password: "git_password"          # Git Server user password
+        password: "git_access_token"          # Git Server user password
         email: "git_email"                # Email to use in git config
         private_key: "path_to_private_key"          # Path to private key file which has write-access to the git repo
 
@@ -476,7 +493,9 @@ network:
         - peer:
           name: peer0          
           type: anchor    # This can be anchor/nonanchor. Atleast one peer should be anchor peer.   
-          gossippeeraddress: peer0.warehouse-net:7051 # Internal Address of the other peer in same Org for gossip, same peer if there is only one peer          
+          gossippeeraddress: peer0.warehouse-net:7051 # Internal Address of the other peer in same Org for gossip, same peer if there is only one peer
+          peerAddress: peer0.warehouse-net.org3ambassador.blockchaincloudpoc.com:8443 # External URI of the peer       
+          cli: disabled      # Creates a peer cli pod depending upon the (enabled/disabled) tag.   
           grpc:
             port: 7051       
           events:
@@ -493,10 +512,11 @@ network:
             name: "chaincode_name"     #This has to be replaced with the name of the chaincode
             version: "chaincode_version"     #This has to be replaced with the version of the chaincode
             maindirectory: "chaincode_main"   #The main directory where chaincode is needed to be placed
+            lang: "golang"  # The language in which the chaincode is written ( golang/java/node )
             repository:
               username: "git_username"          # Git Service user who has rights to check-in in all branches
-              password: "git_password"
-              url: "github.com/hyperledger-labs/blockchain-automation-framework.git"
+              password: "git_access_token"
+              url: "github.com/<username>/blockchain-automation-framework.git"
               branch: develop
               path: "chaincode_src"   #The path to the chaincode 
             arguments: 'chaincode_args'     #Arguments to be passed along with the chaincode parameters

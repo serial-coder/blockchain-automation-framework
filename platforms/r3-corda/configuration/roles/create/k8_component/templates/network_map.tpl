@@ -1,9 +1,9 @@
-apiVersion: flux.weave.works/v1beta1
+apiVersion: helm.fluxcd.io/v1
 kind: HelmRelease
 metadata:
   name: {{ component_name }}
   annotations:
-    flux.weave.works/automated: "false"
+    fluxcd.io/automated: "false"
   namespace: {{ component_ns }}
 spec:
   releaseName: {{ component_name }}
@@ -68,7 +68,12 @@ spec:
     service:
       port: {{ services.nms.ports.servicePort }}
       targetPort: {{ services.nms.ports.targetPort }}
+{% if services.nms.ports.nodePort is defined %}
+      type: NodePort
+      nodePort: {{ services.nms.ports.nodePort }}
+{% else %}
       type: ClusterIP
+{% endif %}
       annotations: {}
     deployment:
       annotations: {}

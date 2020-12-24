@@ -1,10 +1,10 @@
-apiVersion: flux.weave.works/v1beta1
+apiVersion: helm.fluxcd.io/v1
 kind: HelmRelease
 metadata:
   name: {{ name }}-springboot
   namespace: {{ component_ns }}
   annotations:
-    flux.weave.works/automated: "false"
+    fluxcd.io/automated: "false"
 spec:
   releaseName: {{ name }}-springboot
   chart:
@@ -16,8 +16,9 @@ spec:
     replicas: 1
     metadata:
       namespace: {{ component_ns }}
+      type: {{ platform_type }}
     image:
-      containerName: {{ network.docker.url }}/supplychain_corda/springboot_server:latest
+      containerName: {{ network.docker.url }}/supplychain_corda:{{ image_tag }}
       initContainerName: {{ network.docker.url }}/alpine-utils:1.0
       imagePullSecret: regcred
       privateCertificate: true
@@ -60,6 +61,9 @@ spec:
     service:
       type: NodePort
       annotations: {}
+    networkservices:
+      networkmap: {{ networkmap_name }}
+      doorman: {{ doorman_name }}
     vault:
       address: "{{ component_vault.url }}"
       role: vault-role

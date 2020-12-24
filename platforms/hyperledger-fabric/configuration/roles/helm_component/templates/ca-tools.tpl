@@ -1,10 +1,10 @@
-apiVersion: flux.weave.works/v1beta1
+apiVersion: helm.fluxcd.io/v1
 kind: HelmRelease
 metadata:
   name: {{ component_name }}-ca-tools
   namespace: {{ component_name }}
   annotations:
-    flux.weave.works/automated: "false"
+    fluxcd.io/automated: "false"
 spec:
   releaseName: {{ component_name }}-ca-tools
   chart:
@@ -20,10 +20,9 @@ spec:
 
     image:
       repository: hyperledger/fabric-ca-tools
-      tag: 1.2.0
+      tag: 1.2.1
       pullPolicy: IfNotPresent
       
     storage:
       storageclassname: {{ component | lower }}sc
       storagesize: 512Mi
-

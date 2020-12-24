@@ -1,10 +1,10 @@
-apiVersion: flux.weave.works/v1beta1
+apiVersion: helm.fluxcd.io/v1
 kind: HelmRelease
 metadata:
   name: {{ name }}-restserver
   namespace: {{ component_ns }}
   annotations:
-    flux.weave.works/automated: "false"
+    fluxcd.io/automated: "false"
 spec:
   chart:
     path: {{ component_gitops.chart_source }}/fabric-restserver
@@ -18,7 +18,7 @@ spec:
       name: {{ name }}-restserver
       port: {{ peer_restserver_port }}
       localmspid: {{ name }}MSP
-      image: {{ network.docker.url }}/supplychain_fabric/rest_server:latest
+      image: {{ network.docker.url }}/supplychain_fabric:rest_server_latest
       username: admin
       cert_path: "/secret/tls/admin.cert"
       key_path: "/secret/tls/admin.pem"
@@ -29,10 +29,10 @@ spec:
       address: {{ component_vault.url }}
       role: vault-role
       authpath: {{ component_ns }}-auth
-      secretprefix: secret/crypto/peerOrganizations/{{ component_ns }}
+      secretprefix: {{ component_vault.secret_path | default('secret') }}/crypto/peerOrganizations/{{ component_ns }}
       serviceaccountname: vault-auth
       imagesecretname: regcred
-      image: adopblockchaincloud0502.azurecr.io/alpine-utils:1.0
+      image: hyperledgerlabs/alpine-utils:1.0
     service:
       servicetype: ClusterIP
       ports:

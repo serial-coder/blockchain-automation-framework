@@ -1,9 +1,9 @@
-apiVersion: flux.weave.works/v1beta1
+apiVersion: helm.fluxcd.io/v1
 kind: HelmRelease
 metadata:
   name: {{ component_name }}-initial-registration
   annotations:
-    flux.weave.works/automated: "false"
+    fluxcd.io/automated: "false"
   namespace: {{ component_ns }}
 spec:
   releaseName: {{ component_name }}-initial-registration
@@ -69,7 +69,7 @@ spec:
       networkMapURL: 
       doormanURL:
 {% endif %}
-      jarVersion: "4.0"
+      jarVersion: {{ network.version | quote }}
       devMode: false
       env:
         - name: JAVA_OPTIONS

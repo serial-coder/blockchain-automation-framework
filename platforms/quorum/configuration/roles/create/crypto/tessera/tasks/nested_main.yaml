@@ -1,7 +1,7 @@
 # This task checks if the tm crypto material is already stored in the vault or not
 - name: Check if tm key is already present in the vault
   shell: |
-    vault read -field=tm.key secret/{{ component_ns }}/crypto/{{ peer.name }}/transaction
+    vault read -field=tm.key {{ vault.secret_path | default('secret') }}/{{ component_ns }}/crypto/{{ peer.name }}/transaction
   environment:
     VAULT_ADDR: "{{ vault.url }}"
     VAULT_TOKEN: "{{ vault.root_token }}"
@@ -9,12 +9,12 @@
   ignore_errors: yes
 
 # This task creates the build directory if it does not exist
-- name: Create build directory if it does not exist
-  file:
-    path: build/{{ component_name }}/{{ peer.name }}
-    state: directory
-    mode: '0755'
-    recurse: yes
+- name: "Creating the build directory"
+  include_role:
+    name: "{{ playbook_dir }}/../../shared/configuration/roles/check/setup"
+  vars:
+    path: "build/{{ component_name }}/{{ peer.name }}"
+    check: "ensure_dir"
   when: vault_tmkey_result.failed == True 
 
 # This task checks if the tessera app jar exits
@@ -27,7 +27,7 @@
 # This task downloads the tessera jar file
 - name: Download tessera jar
   get_url:
-    url: https://github.com/jpmorganchase/tessera/releases/download/tessera-0.8/tessera-app-0.8-app.jar
+    url: "{{ tessera.repo }}"
     dest: build/tessera-app.jar
   when: vault_tmkey_result.failed == True and tessera_app_jar_result.stat.exists == False
 
@@ -41,7 +41,7 @@
 # This task copies the crypto material to the vault
 - name: Copy the crypto material to Vault
   shell: |
-    vault kv put secret/{{ component_ns }}/crypto/{{ peer.name }}/transaction tm.pub="$(cat build/{{ component_name }}/{{ peer.name }}/tm.pub)" tm.key="$(cat build/{{ component_name }}/{{ peer.name }}/tm.key)"
+    vault kv put {{ vault.secret_path | default('secret') }}/{{ component_ns }}/crypto/{{ peer.name }}/transaction tm.pub="$(cat build/{{ component_name }}/{{ peer.name }}/tm.pub)" tm.key="$(cat build/{{ component_name }}/{{ peer.name }}/tm.key)"
   environment:
     VAULT_ADDR: "{{ vault.url }}"
     VAULT_TOKEN: "{{ vault.root_token }}"

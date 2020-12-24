@@ -31,7 +31,9 @@ import os
 # ones.
 extensions = [
     'sphinx.ext.todo',
-    'sphinx_markdown_tables'
+    'sphinx_markdown_tables',
+    'recommonmark',
+    'sphinxcontrib.mermaid'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -42,11 +44,10 @@ templates_path = ['_templates']
 # for Sphinx-1.3 ###MARKDOWN
 from recommonmark.parser import CommonMarkParser
 
-source_parsers = {
-    '.md': CommonMarkParser,
+source_suffix = {
+    '.rst': 'restructuredtext',
+    '.md': 'markdown',
 }
-
-source_suffix = ['.rst', '.md']
 #source_suffix = '.rst'
 
 # The master toctree document.
@@ -166,7 +167,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, 'BAFOpensource', u'Blockchain Automation Framework Documentation',
-     author, 'BAFOpensource', 'An automation framework for delivering consistent production ready DLT networks on cloud based infrastructures.',
+     author, 'BAFOpensource', 'An automation framework for delivering consistent production ready DLT/Blockchain networks on cloud based infrastructures.',
      'Miscellaneous'),
 ]
 
@@ -187,3 +188,7 @@ epub_title = project
 
 # A list of files that should not be packed into the epub file.
 epub_exclude_files = ['search.html']
+
+html_css_files = [
+    'custom.css',
+]

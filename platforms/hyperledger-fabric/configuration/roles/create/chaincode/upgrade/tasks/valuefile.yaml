@@ -1,11 +1,10 @@
-
 ############################################################################################
 # This role creates the upgrade_chaincode value file
 
 # Check or Wait if install-chaincode is already run
 ---
 - name: 'Check/Wait for install-chaincode job'
-  k8s_facts:
+  k8s_info:
     kind: "Job"
     name: installchaincode-{{ peer.name }}-{{ peer.chaincode.name }}-{{ peer.chaincode.version }}
     namespace: "{{ namespace }}"
@@ -35,7 +34,7 @@
     component_name: "upgrade-{{item.channel_name|lower}}-{{peer.chaincode.name}}{{peer.chaincode.version}}"
     namespace: "{{ org.name |lower }}-net"
     peer_name: "{{ peer.name }}"
-    peer_address: "{{ peer.gossippeeraddress }}"    
+    peer_address: "{{ peer.name }}.{{ org.name |lower }}-net:{{ peer.grpc.port }}"
     git_url: "{{ org.gitops.git_ssh }}"
     git_branch: "{{ org.gitops.branch }}"
     charts_dir: "{{ org.gitops.chart_source }}"
@@ -60,4 +59,4 @@
     GIT_PASSWORD: "{{ org.gitops.password }}"
     GIT_BRANCH: "{{ org.gitops.branch }}"
     GIT_RESET_PATH: "platforms/hyperledger-fabric/configuration"
-    msg: "Pushing chaincode upgrade files"
+    msg: "[ci skip] Pushing chaincode upgrade files"

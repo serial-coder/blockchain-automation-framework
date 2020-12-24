@@ -1,9 +1,9 @@
-apiVersion: flux.weave.works/v1beta1
+apiVersion: helm.fluxcd.io/v1
 kind: HelmRelease
 metadata:
   name: {{ component_name }}
   annotations:
-    flux.weave.works/automated: "false"
+    fluxcd.io/automated: "false"
   namespace: {{ component_ns }}
 spec:
   releaseName: {{ component_name }}
@@ -19,22 +19,39 @@ spec:
       name: {{ network.name }}
     organization:
       name: {{ organizationItem.name }}
+    genesis:
+      pool: {{ genesis.pool | indent(width=8) | b64encode }}
+      domain: {{ genesis.domain | indent(width=8) | b64encode }}
+      add_org: {{ genesis.add_org | default(false) }}
     image:
       pullSecret: regcred
       initContainer:
         name: {{ component_name }}-init
         repository: alpine:3.9.4
+      cli:
+        name: {{ component_name }}-ledger-txn
+        repository: {{ network.docker.url }}/indy-ledger-txn:latest
+        pullSecret: regcred  
       indyNode:
         name: {{ component_name }}
-        repository: {{ network.docker.url }}/indy-node:0.3.0.0
+        repository: {{ network.docker.url }}/indy-node:{{ network.version }}
     node:
       name: {{ stewardItem.name }}
       ip: 0.0.0.0
+      publicIp: {{ stewardItem.publicIp }}
       port: {{ stewardItem.node.port }}
+      ambassadorPort: {{ stewardItem.node.ambassador }}
     client:
+      publicIp: {{ stewardItem.publicIp }}
       ip: 0.0.0.0
       port: {{ stewardItem.client.port }}
+      ambassadorPort: {{ stewardItem.client.ambassador }}
     service:
+{% if organizationItem.cloud_provider != 'minikube' %}
+      type: ClusterIP
+{% else %}
+      type: NodePort
+{% endif %}
       ports:
         nodePort: {{ stewardItem.node.port }}
         nodeTargetPort: {{ stewardItem.node.targetPort }}
@@ -61,6 +78,7 @@ spec:
         # Directory to store node info.
         NODE_INFO_DIR = '/var/lib/indy/data'
     ambassador:
+{% if organizationItem.cloud_provider != 'minikube' and network.env.proxy == 'ambassador' %}
       annotations: |-
         ---
         apiVersion: ambassador/v1
@@ -74,6 +92,9 @@ spec:
         name: {{ component_name|e }}-client-mapping
         port: {{ stewardItem.client.ambassador }}
         service: {{ component_name|e }}.{{ component_ns }}:{{ stewardItem.client.targetPort }}
+{% else %}
+      disabled: true
+{% endif %}
     vault:
       address: {{ vault.url }}
       serviceAccountName: {{ organizationItem.name }}-{{ stewardItem.name }}-vault-auth
@@ -83,8 +104,8 @@ spec:
       role: ro
     storage:
       data:
-        storagesize: 2Gi
+        storagesize: 3Gi
         storageClassName: {{ organizationItem.name }}-{{ organizationItem.cloud_provider }}-storageclass
       keys:
-        storagesize: 1Gi
+        storagesize: 3Gi
         storageClassName: {{ organizationItem.name }}-{{ organizationItem.cloud_provider }}-storageclass

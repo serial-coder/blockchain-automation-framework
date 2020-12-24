@@ -1,4 +1,4 @@
-apiVersion: apps/v1beta1
+apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: {{ $.Values.orderer.name }}
@@ -14,12 +14,19 @@ spec:
     type: RollingUpdate
   serviceName: "{{ $.Values.orderer.name }}"
   replicas: 1
+  selector:
+    matchLabels:
+      app: {{ $.Values.orderer.name }}
+      helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+      app.kubernetes.io/name: {{ $.Values.orderer.name }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
   template:
     metadata:
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
       labels:
         app: {{ $.Values.orderer.name }}
+        helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
         app.kubernetes.io/name: {{ $.Values.orderer.name }}
         app.kubernetes.io/instance: {{ .Release.Name }} 
     spec:    
@@ -52,6 +59,8 @@ spec:
         args:
         - |-
           #!/usr/bin/env sh
+          if [ {{ $.Values.consensus.name }} == kafka ]
+          then
           COUNTER=1
           FLAG=true
           KAFKACOUNT=0
@@ -93,6 +102,7 @@ spec:
              exit 1
              break
 
+          fi
           fi
       - name: certificates-init
         image: {{ $.Values.metadata.images.alpineutils }}
@@ -182,7 +192,7 @@ spec:
       - name: {{ $.Values.orderer.name }}
         image: {{ $.Values.metadata.images.orderer }}
         workingDir: /opt/gopath/src/github.com/hyperledger/fabric
-        command: ["sh", "-c", "cat /var/hyperledger/orderer/genesis/genesis.block.base64 | base64 --decode > /var/hyperledger/orderer/orderer.genesis.block && orderer"]
+        command: ["sh", "-c", "cat /var/hyperledger/orderer/genesis/genesis.block.base64 | base64 -d > /var/hyperledger/orderer/orderer.genesis.block && orderer"]
         ports:
         - containerPort: 7050
         envFrom:

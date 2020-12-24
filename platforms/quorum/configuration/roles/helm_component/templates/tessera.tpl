@@ -1,12 +1,13 @@
-apiVersion: flux.weave.works/v1beta1
+apiVersion: helm.fluxcd.io/v1
 kind: HelmRelease
 metadata:
   name: {{ component_name }}
   namespace: {{ component_ns }}
   annotations:
-    flux.weave.works/automated: "false"
+    fluxcd.io/automated: "false"
 spec:
   releaseName: {{ component_name }}
+  helmVersion: v3
   chart:
     git: {{ git_url }}
     ref: {{ git_branch }}
@@ -24,11 +25,23 @@ spec:
       mysql: mysql/mysql-server:5.7
     node:
       name: {{ peer.name }}
+{% if add_new_org %}
+{% if network.config.consensus == 'raft' %}
+      peer_id: {{ peer_id | int }}
+{% endif %}
+{% endif %}
+      status: {{ node_status }}
       consensus: {{ consensus }}
+      subject: {{ peer.subject }}
       mountPath: /etc/quorum/qdata
       imagePullSecret: regcred
       keystore: keystore_1
+{% if item.cloud_provider == 'minikube' %}     
+      servicetype: NodePort
+{% else %}      
       servicetype: ClusterIP
+{% endif %}
+      lock: {{ peer.lock | lower }}
       ports:
         rpc: {{ peer.rpc.port }}
         raft: {{ peer.raft.port }}
@@ -37,42 +50,31 @@ spec:
         db: {{ peer.db.port }}
       dbname: demodb
       mysqluser: demouser
-      mysqlpassword: password
     vault:
       address: {{ vault.url }}
-      secretprefix: secret/{{ component_ns }}/crypto/{{ peer.name }}
+      secretprefix: {{ vault.secret_path | default('secret') }}/{{ component_ns }}/crypto/{{ peer.name }}
       serviceaccountname: vault-auth
       keyname: quorum
       tm_keyname: transaction
       role: vault-role
       authpath: quorum{{ name }}
     tessera:
-      dburl: "jdbc:mysql://localhost:3306/demodb"
-      dbusername: $username
-      dbpassword: $password
+      dburl: "jdbc:mysql://{{ peer.name }}:3306/demodb"
+      dbusername: demouser
 {% if network.config.tm_tls == 'strict' %}
-      url: "https://localhost:9001"
+      url: "https://{{ peer.name }}.{{ external_url }}:{{ peer.transaction_manager.ambassador }}"
 {% else %}
-      url: "http://localhost:9001"
+      url: "http://{{ peer.name }}.{{ external_url }}:{{ peer.transaction_manager.ambassador }}"
 {% endif %}
       othernodes:
 {% for tm_node in network.config.tm_nodes %}
         - url: {{ tm_node }}
 {% endfor %}
-      tls: {{ network.config.tm_tls | upper }}
-      trust: {{ network.config.tm_trust | upper }}
+      tls: "{{ network.config.tm_tls | upper }}"
+      trust: "{{ network.config.tm_trust | upper }}"
     genesis: {{ genesis }}
-    staticnodes:
-{% if network.config.consensus == 'ibft' %}
-{% for enode in enode_data_list %}
-      - enode://{{ enode.enodeval }}@{{ enode.peer_name }}.{{ external_url }}:{{ enode.p2p_ambassador }}?discport=0
-{% endfor %}
-{% endif %}
-{% if network.config.consensus == 'raft' %}
-{% for enode in enode_data_list %}
-      - enode://{{ enode.enodeval }}@{{ enode.peer_name }}.{{ external_url }}:{{ enode.p2p_ambassador }}?discport=0&raftport={{ enode.raft_ambassador }}
-{% endfor %}
-{% endif %}
+    staticnodes: 
+      {{ staticnodes }}
     proxy:
       provider: "ambassador"
       external_url: {{ name }}.{{ external_url }}

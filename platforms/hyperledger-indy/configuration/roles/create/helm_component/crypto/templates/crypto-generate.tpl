@@ -1,9 +1,9 @@
-apiVersion: flux.weave.works/v1beta1
+apiVersion: helm.fluxcd.io/v1
 kind: HelmRelease
 metadata:
   name: {{ component_name }}-{{ identity_name }}
   annotations:
-    flux.weave.works/automated: "false"
+    fluxcd.io/automated: "false"
   namespace: {{ component_ns }}
 spec:
   releaseName: {{ component_name }}-{{ identity_name }}
@@ -19,7 +19,7 @@ spec:
       name: {{ network.name }}
     image:
       name: {{ component_name }}
-      repository: {{ network.docker.url }}/indy-key-mgmt:0.3.0.0
+      repository: {{ network.docker.url }}/indy-key-mgmt:{{ network.version }}
       pullSecret: regcred
     vault:
       address: {{ vault.url }}

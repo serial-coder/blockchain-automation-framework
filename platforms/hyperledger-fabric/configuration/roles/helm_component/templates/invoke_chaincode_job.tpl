@@ -1,10 +1,10 @@
-apiVersion: flux.weave.works/v1beta1
+apiVersion: helm.fluxcd.io/v1
 kind: HelmRelease
 metadata:
   name: {{ component_name }}
   namespace: {{ namespace }}
   annotations:
-    flux.weave.works/automated: "false"
+    fluxcd.io/automated: "false"
 spec:
   releaseName: {{ component_name }}
   chart:
@@ -14,6 +14,9 @@ spec:
   values:
     metadata:
       namespace: {{ namespace }}
+      network:
+        version: {{ network.version }}
+      add_organization: {{ add_organization }}
       images:
         fabrictools: {{ fabrictools_image }}
         alpineutils: {{ alpine_image }}
@@ -27,17 +30,29 @@ spec:
       role: vault-role
       address: {{ vault.url }}
       authpath: {{ namespace | e }}-auth
-      adminsecretprefix: secret/crypto/peerOrganizations/{{ namespace }}/users/admin 
-      orderersecretprefix: secret/crypto/peerOrganizations/{{ namespace }}/orderer
+      adminsecretprefix: {{ vault.secret_path | default('secret') }}/crypto/peerOrganizations/{{ namespace }}/users/admin 
+      orderersecretprefix: {{ vault.secret_path | default('secret') }}/crypto/peerOrganizations/{{ namespace }}/orderer
       serviceaccountname: vault-auth
       imagesecretname: regcred
       tls: false
     orderer:
       address: {{ participant.ordererAddress }}
     chaincode:
+      builder: hyperledger/fabric-ccenv:{{ network.version }}
       name: {{ component_chaincode.name | lower | e }}
       version: {{ component_chaincode.version }}
-      instantiationarguments: {{ component_chaincode.arguments | quote}}
-      endorsementpolicies:  {{ component_chaincode.endorsements | quote}}
+      invokearguments: {{ component_chaincode.arguments | quote}}
+      endorsementpolicies:  {{ component_chaincode.endorsements | quote }}
     channel:
       name: {{ item.channel_name | lower }}
+{% if '2.' in network.version %}
+    endorsers:
+        creator: {{ namespace }}
+        name: {% for name in approvers.name %} {{ name }} {% endfor %} 
+        corepeeraddress: {% for address in approvers.corepeerAddress %} {{ address }} {% endfor %}
+{% else %}
+    endorsers:
+        creator: {{ namespace }}
+        name: {{ peer_name }}
+        corepeeraddress: {{ peer_address }}
+{% endif %}

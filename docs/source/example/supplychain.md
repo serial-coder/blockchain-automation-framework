@@ -2,7 +2,7 @@
 
 ## Use case description
 Welcome to the Supply Chain application which allows nodes to track products or goods along their chain of custody,
-providing everyone along the way with relevant data to their product. The implementation has been done for Hyperledger Fabric and R3 Corda. The two will slightly differ in behavior but follow the same principles. There are two types of items that can be tracked, products and containers. Products are defined as such:
+providing everyone along the way with relevant data to their product. The implementation has been done for Hyperledger Fabric, Quorum and R3 Corda. The three will slightly differ in behavior but follow the same principles. There are two types of items that can be tracked, products and containers. Products are defined as such:
 
 
 | Field       | Description                 |
@@ -80,15 +80,6 @@ These playbooks make use of several roles defined within
 
 They are responsible for creating the helm release files for the platform specfic rest service, the nodejs api abstraction layer, and the front end. 
 
-Jenkinsfiles have also been provided to automate the execution of these playbooks and other additional steps:
-
-* buildFrontendImages.jenkinsfile - Build images for frontend and pushes to the desired container repository
-* buildImages.Jenkinsfile - Build images for rest server and nodejs application
-* deployChaincode.Jenkinsfile or deployCorDapps.Jenkinsfile - Follows the necessary steps to deploy the platforms smartcontracts to the existing network
-* deployApp.Jenkinsfile - Uses ansible playbooks to create helm releases which GitOps uses to deploy the rest server, nodejs app, and frontend images.
-
-The jenkins pipelines can automate the execution of the ansible playbooks as well as pass in any values that are not to be hardcoded in the network.yaml file
-
 ### Generating QR code
 Products and containers are identified by their QR code. These codes need to be generated for interacting with products and contianers. A module for generating QR is provided along with this sample. The QR generating module can be found on the location:
 ```
@@ -104,7 +95,7 @@ Following are the required fields in the QR Code generation form for the product
 | Tracking ID | string | A predefined unique ID for product|
 | Type | string | Must match asset in /public , for misc argument |
 | Product Details | JSON key:value format | Used for misc argument, eg {"name":"Expensive Dextrose"} |
-| Counter Parties |  CSV, no spaces | Counter parties should be of the format that the DLT<br/>  network can identify. E.g. For Corda, these are the Node OUs, and<br/> for Fabric, these are the subjects of Anchor Peers. |
+| Counter Parties |  CSV, no spaces | Counter parties should be of the format that the DLT/Blockchain<br/>  network can identify. E.g. For Corda, these are the Node OUs, and<br/> for Fabric, these are the subjects of Anchor Peers. |
 
 
 The second section is provided for generating the QR code for the containers. Codes from this section are meant to be generated about a container and used to interact with a container. 

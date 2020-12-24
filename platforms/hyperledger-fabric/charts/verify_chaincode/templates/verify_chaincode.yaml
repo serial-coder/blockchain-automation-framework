@@ -16,6 +16,10 @@ spec:
     metadata:
       labels:
         app: verifychaincode-{{ $.Values.peer.name }}-{{ $.Values.chaincode.name }}
+        app.kubernetes.io/name: verifychaincode-{{ $.Values.chaincode.name }}
+        helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+        app.kubernetes.io/managed-by: {{ .Release.Service }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
       restartPolicy: OnFailure
       serviceAccountName: {{ $.Values.vault.serviceaccountname }}
@@ -122,6 +126,7 @@ spec:
       containers:
       - name: verifychaincode
         image: {{ $.Values.metadata.images.fabrictools }}
+        imagePullPolicy: Always
         stdin: true
         tty: true
         command: ["sh", "-c"]
@@ -157,6 +162,8 @@ spec:
           value: "{{ $.Values.chaincode.name }}"
         - name: CHAINCODE_VERSION
           value: "{{ $.Values.chaincode.version }}"
+        - name: CORE_CHAINCODE_BUILDER
+          value: "{{ $.Values.chaincode.builder }}"
         - name: CHANNEL_NAME
           value: "{{ $.Values.channel.name }}"
         - name: ARGUMENTS

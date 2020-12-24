@@ -19,12 +19,14 @@ metadata:
       name: {{ .Values.node.name }}-rpc
       port: {{ .Values.proxy.rpcport }}
       service: {{ .Values.node.name }}.{{ .Values.metadata.namespace }}:{{ .Values.node.ports.rpc }}
+      {{- if eq $.Values.node.consensus "raft" }}
       ---
       apiVersion: ambassador/v1
       kind: TCPMapping
       name: {{ .Values.node.name }}-raft
       port: {{ .Values.proxy.portRaft }}
       service: {{ .Values.node.name }}.{{ .Values.metadata.namespace }}:{{ .Values.node.ports.raft }}
+      {{- end }}
       ---
       apiVersion: ambassador/v1
       kind: TCPMapping
@@ -41,16 +43,24 @@ metadata:
     {{- include "labels.custom" . | nindent 2 }}
   name: {{ .Values.node.name }}
 spec:
+  selector:
+    app.kubernetes.io/name: {{ .Values.node.name }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }} 
+    {{- include "labels.custom" . | nindent 2 }}
   type: {{ .Values.node.servicetype }}
   ports:
   - name: wsrpc-listener
     protocol: TCP
     port: {{ .Values.node.ports.rpc }}
     targetPort: {{ .Values.node.ports.rpc }}
+{{- if eq $.Values.node.consensus "raft" }}
   - name: raft
     protocol: TCP
     port: {{ .Values.node.ports.raft }}
     targetPort: {{ .Values.node.ports.raft }}
+{{- end }}
   - name: tm-manager
     protocol: TCP
     port: {{ .Values.node.ports.constellation }}
